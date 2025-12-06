@@ -18,7 +18,7 @@ _config.set("DEFAULT", "USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) 
 
 def web_fetch(
     url: str,
-    include_links: bool = False,
+    include_links: bool = True,
     include_images: bool = False,
     include_metadata: bool = True
 ) -> str:
@@ -31,7 +31,7 @@ def web_fetch(
 
     Args:
         url: The URL to fetch content from (must be a valid HTTP/HTTPS URL)
-        include_links: Include hyperlinks in the output (default: False)
+        include_links: Include hyperlinks in the output (default: True)
         include_images: Include image descriptions with alt text (default: False)
         include_metadata: Include page metadata like title, author, date (default: True)
 
