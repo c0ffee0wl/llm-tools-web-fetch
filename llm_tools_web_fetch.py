@@ -18,7 +18,7 @@ _config = use_config()
 _config.set("DEFAULT", "USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 
 
-def web_fetch(
+def fetch_url(
     url: str,
     include_links: bool = True,
     include_images: bool = False,
@@ -174,4 +174,4 @@ def web_fetch(
 @llm.hookimpl
 def register_tools(register):
     """Register web fetch tool."""
-    register(web_fetch)
+    register(fetch_url)

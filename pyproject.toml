@@ -17,7 +17,7 @@ dependencies = [
 Homepage = "https://github.com/c0ffee0wl/llm-linux-setup"
 
 [project.entry-points.llm]
-web_fetch = "llm_tools_web_fetch"
+fetch_url = "llm_tools_web_fetch"
 
 [build-system]
 requires = ["setuptools>=61.0"]
