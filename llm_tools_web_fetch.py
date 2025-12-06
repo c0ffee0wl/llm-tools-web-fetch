@@ -9,6 +9,11 @@ import re
 
 import llm
 import trafilatura
+from trafilatura.settings import use_config
+
+# Configure trafilatura with a browser-like user agent
+_config = use_config()
+_config.set("DEFAULT", "USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 
 
 def web_fetch(
@@ -53,7 +58,7 @@ def web_fetch(
 
     try:
         # Fetch the page content
-        downloaded = trafilatura.fetch_url(url)
+        downloaded = trafilatura.fetch_url(url, config=_config)
 
         if downloaded is None:
             return json.dumps({
