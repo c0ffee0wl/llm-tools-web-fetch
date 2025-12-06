@@ -6,9 +6,11 @@ returning markdown-formatted text with metadata suitable for LLM processing.
 """
 import json
 import re
+from urllib.parse import urljoin
 
 import llm
 import trafilatura
+from lxml import html as lxml_html
 from trafilatura.settings import use_config
 
 # Configure trafilatura with a browser-like user agent
@@ -20,7 +22,8 @@ def web_fetch(
     url: str,
     include_links: bool = True,
     include_images: bool = False,
-    include_metadata: bool = True
+    include_metadata: bool = True,
+    extract_links: bool = False
 ) -> str:
     """
     Fetch and extract main content from a web page.
@@ -34,9 +37,13 @@ def web_fetch(
         include_links: Include hyperlinks in the output (default: True)
         include_images: Include image descriptions with alt text (default: False)
         include_metadata: Include page metadata like title, author, date (default: True)
+        extract_links: Extract ALL links from page including navigation/sidebars (default: False).
+            When True, bypasses content extraction and returns a list of all links found on the page.
+            Useful for finding download links, PDF links, or navigation that would otherwise be filtered.
 
     Returns:
-        JSON with extracted content, metadata, and any errors
+        JSON with extracted content, metadata, and any errors.
+        When extract_links=True, returns JSON with links array instead of content.
     """
     # Validate URL
     if not url:
@@ -66,6 +73,31 @@ def web_fetch(
                 "url": url,
                 "metadata": {},
                 "content": ""
+            }, indent=2)
+
+        # Extract ALL links if requested (bypasses content filtering)
+        if extract_links:
+            tree = lxml_html.fromstring(downloaded)
+            seen = set()
+            links = []
+            for a in tree.xpath('//a[@href]'):
+                href = (a.get('href') or '').strip()
+                # Skip empty, anchor-only, javascript, mailto, tel, data links
+                if not href or href.startswith(('#', 'javascript:', 'mailto:', 'tel:', 'data:')):
+                    continue
+                absolute_url = urljoin(url, href)
+                # Deduplicate by URL
+                if absolute_url in seen:
+                    continue
+                seen.add(absolute_url)
+                text = (a.text_content() or '').strip()
+                links.append({'url': absolute_url, 'text': text})
+
+            return json.dumps({
+                "url": url,
+                "links": links,
+                "link_count": len(links),
+                "error": None
             }, indent=2)
 
         # Extract content with specified options
