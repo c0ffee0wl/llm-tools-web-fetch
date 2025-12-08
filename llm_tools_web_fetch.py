@@ -26,24 +26,29 @@ def fetch_url(
     extract_links: bool = False
 ) -> str:
     """
-    Fetch and extract main content from a web page.
+    Fetch readable text from a webpage URL.
 
-    Use this tool to retrieve clean, readable content from any web URL.
-    Returns markdown-formatted text extracted from the page, excluding
-    navigation, ads, and other boilerplate content.
+    USE when the user asks to:
+    - Read/fetch a specific webpage or article
+    - Get content from a URL they provided
+    - Extract text from an online resource
+
+    DO NOT use for:
+    - YouTube videos (use load_yt instead)
+    - PDF documents (use load_pdf instead)
+    - GitHub repositories (use load_github instead)
+    - General web searches (use search_google instead)
 
     Args:
-        url: The URL to fetch content from (must be a valid HTTP/HTTPS URL)
-        include_links: Include hyperlinks in the output (default: True)
-        include_images: Include image descriptions with alt text (default: False)
-        include_metadata: Include page metadata like title, author, date (default: True)
-        extract_links: Extract ALL links from page including navigation/sidebars (default: False).
-            When True, bypasses content extraction and returns a list of all links found on the page.
-            Useful for finding download links, PDF links, or navigation that would otherwise be filtered.
+        url: Full HTTP/HTTPS URL to fetch
+        include_links: Keep hyperlinks in output (default: True)
+        include_images: Include image alt-text descriptions (default: False)
+        include_metadata: Include title, author, date if available (default: True)
+        extract_links: Return all page links instead of content (default: False)
+            Use for finding download links or navigation URLs.
 
     Returns:
-        JSON with extracted content, metadata, and any errors.
-        When extract_links=True, returns JSON with links array instead of content.
+        JSON with 'content' (markdown text), 'metadata', and 'error' fields.
     """
     # Validate URL
     if not url:
