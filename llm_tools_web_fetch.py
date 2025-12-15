@@ -44,25 +44,14 @@ def fetch_url(
     extract_links_only: bool = False
 ) -> str:
     """
-    Fetch readable text from a webpage URL.
-
-    USE when the user asks to:
-    - Read/fetch a specific webpage or article
-    - Get content from a URL they provided
-    - Extract text from an online resource
-
-    DO NOT use for:
-    - YouTube videos (use load_yt instead)
-    - PDF documents (use load_pdf instead)
-    - GitHub repositories (use load_github instead)
-    - General web searches (use search_google instead)
+    Extract readable text from a webpage URL using Trafilatura.
 
     Args:
         url: Full HTTP/HTTPS URL to fetch
         include_links: Keep inline hyperlinks in extracted content (default: True)
         include_images: Include image alt-text descriptions (default: False)
         include_metadata: Include title, author, date if available (default: True)
-        extract_links_only: Return only links without page content (default: False)
+        extract_links_only: Return only links without page content (default: False).
             Use for finding download links or navigation URLs.
 
     Returns:
