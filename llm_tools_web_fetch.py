@@ -46,6 +46,10 @@ def fetch_url(
     """
     Extract readable text from a webpage URL using Trafilatura.
 
+    Fetches web content and extracts the main article/body text as clean markdown,
+    filtering out navigation, ads, and boilerplate. Includes all page links in a
+    separate section. Best for articles, documentation, and text-heavy pages.
+
     Args:
         url: Full HTTP/HTTPS URL to fetch
         include_links: Keep inline hyperlinks in extracted content (default: True)
