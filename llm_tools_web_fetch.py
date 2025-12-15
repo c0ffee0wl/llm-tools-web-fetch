@@ -18,12 +18,30 @@ _config = use_config()
 _config.set("DEFAULT", "USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 
 
+def _extract_links(downloaded: str, base_url: str) -> list[dict]:
+    """Extract all links from downloaded HTML."""
+    tree = lxml_html.fromstring(downloaded)
+    seen = set()
+    links = []
+    for a in tree.xpath('//a[@href]'):
+        href = (a.get('href') or '').strip()
+        if not href or href.startswith(('#', 'javascript:', 'mailto:', 'tel:', 'data:')):
+            continue
+        absolute_url = urljoin(base_url, href)
+        if absolute_url in seen:
+            continue
+        seen.add(absolute_url)
+        text = (a.text_content() or '').strip()
+        links.append({'url': absolute_url, 'text': text})
+    return links
+
+
 def fetch_url(
     url: str,
     include_links: bool = True,
     include_images: bool = False,
     include_metadata: bool = True,
-    extract_links: bool = False
+    extract_links_only: bool = False
 ) -> str:
     """
     Fetch readable text from a webpage URL.
@@ -41,14 +59,15 @@ def fetch_url(
 
     Args:
         url: Full HTTP/HTTPS URL to fetch
-        include_links: Keep hyperlinks in output (default: True)
+        include_links: Keep inline hyperlinks in extracted content (default: True)
         include_images: Include image alt-text descriptions (default: False)
         include_metadata: Include title, author, date if available (default: True)
-        extract_links: Return all page links instead of content (default: False)
+        extract_links_only: Return only links without page content (default: False)
             Use for finding download links or navigation URLs.
 
     Returns:
-        JSON with 'content' (markdown text), 'metadata', and 'error' fields.
+        JSON with 'content' (markdown text with links section), 'metadata', and 'error' fields.
+        If extract_links_only=True, returns 'links' array instead of 'content'.
     """
     # Validate URL
     if not url:
@@ -80,24 +99,9 @@ def fetch_url(
                 "content": ""
             }, indent=2)
 
-        # Extract ALL links if requested (bypasses content filtering)
-        if extract_links:
-            tree = lxml_html.fromstring(downloaded)
-            seen = set()
-            links = []
-            for a in tree.xpath('//a[@href]'):
-                href = (a.get('href') or '').strip()
-                # Skip empty, anchor-only, javascript, mailto, tel, data links
-                if not href or href.startswith(('#', 'javascript:', 'mailto:', 'tel:', 'data:')):
-                    continue
-                absolute_url = urljoin(url, href)
-                # Deduplicate by URL
-                if absolute_url in seen:
-                    continue
-                seen.add(absolute_url)
-                text = (a.text_content() or '').strip()
-                links.append({'url': absolute_url, 'text': text})
-
+        # Return only links if requested (bypasses content extraction)
+        if extract_links_only:
+            links = _extract_links(downloaded, url)
             return json.dumps({
                 "url": url,
                 "links": links,
@@ -127,6 +131,15 @@ def fetch_url(
 
         # Clean up excessive newlines (like llm-fragments-site-text does)
         content = re.sub(r"\n{3,}", "\n\n", content)
+
+        # Append all page links to content
+        links = _extract_links(downloaded, url)
+        if links:
+            links_section = "\n\n## Page Links\n\n"
+            for link in links:
+                link_text = link['text'] or link['url']
+                links_section += f"- [{link_text}]({link['url']})\n"
+            content += links_section
 
         # Extract metadata if requested
         metadata = {}
